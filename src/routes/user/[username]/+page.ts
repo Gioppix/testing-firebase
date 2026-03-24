@@ -1,35 +1,24 @@
 import { readable } from 'svelte/store';
 import { db } from '$lib/firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import type { Post, UserProfile } from '$lib/types';
 
 export function load({ params }: { params: { username: string } }) {
     const username = decodeURIComponent(params.username);
 
-    const profile = readable<{ uid: string; bio: string; displayName: string } | null>(
-        null,
-        (set) => {
-            const q = query(collection(db, 'users'), where('displayName', '==', username));
-            return onSnapshot(q, (snap) => {
-                if (!snap.empty) {
-                    const d = snap.docs[0];
-                    set({ uid: d.id, bio: d.data().bio ?? '', displayName: d.data().displayName });
-                } else {
-                    set({ uid: '', bio: '', displayName: username });
-                }
-            });
-        }
-    );
+    const profile = readable<UserProfile | null>(null, (set) => {
+        const q = query(collection(db, 'users'), where('displayName', '==', username));
+        return onSnapshot(q, (snap) => {
+            if (!snap.empty) {
+                const d = snap.docs[0];
+                set({ uid: d.id, bio: d.data().bio ?? '', displayName: d.data().displayName });
+            } else {
+                set({ uid: '', bio: '', displayName: username });
+            }
+        });
+    });
 
-    const posts = readable<
-        {
-            id: string;
-            uid: string;
-            name: string;
-            content: string;
-            createdAt: string | null;
-            pending: boolean;
-        }[]
-    >([], (set) => {
+    const posts = readable<Post[]>([], (set) => {
         const q = query(collection(db, 'posts'), where('name', '==', username));
         return onSnapshot(q, (snap) => {
             set(

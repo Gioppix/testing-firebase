@@ -1,18 +1,10 @@
 import { readable } from 'svelte/store';
 import { db } from '$lib/firebase';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import type { Post } from '$lib/types';
 
 export function load() {
-    const posts = readable<
-        {
-            id: string;
-            uid: string;
-            name: string;
-            content: string;
-            createdAt: string | null;
-            pending: boolean;
-        }[]
-    >([], (set) => {
+    const posts = readable<Post[]>([], (set) => {
         const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
         return onSnapshot(q, (snapshot) => {
             set(

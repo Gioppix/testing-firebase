@@ -4,16 +4,17 @@
 
     let { data } = $props();
     let posts = $derived(data.posts);
+    let user = $derived(data.user);
 
-    let name = $state('');
     let content = $state('');
     let submitting = $state(false);
 
     async function submit() {
-        if (!name.trim() || !content.trim()) return;
+        if (!$user || !content.trim()) return;
         submitting = true;
         await addDoc(collection(db, 'posts'), {
-            name: name.trim(),
+            uid: $user.uid,
+            name: $user.displayName ?? $user.email,
             content: content.trim(),
             createdAt: serverTimestamp()
         });
@@ -35,80 +36,67 @@
     }
 </script>
 
-<div class="min-h-screen bg-black text-white">
-    <div class="mx-auto max-w-xl border-x border-gray-800">
-        <!-- Header -->
-        <div class="sticky top-0 z-10 border-b border-gray-800 bg-black/80 px-4 py-3 backdrop-blur">
-            <h1 class="text-xl font-bold">Home</h1>
+<!-- Compose -->
+{#if $user}
+    <div class="border-b border-gray-800 p-4">
+        <div class="flex gap-3">
+            <div
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500 font-bold text-white"
+            >
+                {($user.displayName ?? $user.email ?? '?')[0].toUpperCase()}
+            </div>
+            <div class="flex flex-1 flex-col gap-3">
+                <textarea
+                    class="min-h-20 resize-none bg-transparent text-lg outline-none placeholder:text-gray-600"
+                    placeholder="What is happening?!"
+                    bind:value={content}
+                ></textarea>
+                <div class="flex justify-end">
+                    <button
+                        onclick={submit}
+                        disabled={submitting || !content.trim()}
+                        class="rounded-full bg-sky-500 px-5 py-1.5 text-sm font-bold transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-40"
+                        >{submitting ? 'Posting...' : 'Post'}</button
+                    >
+                </div>
+            </div>
         </div>
+    </div>
+{/if}
 
-        <!-- Compose -->
-        <div class="border-b border-gray-800 p-4">
+<!-- Feed -->
+{#if $posts.length === 0}
+    <div class="p-8 text-center text-gray-500">No posts yet. Be the first!</div>
+{:else}
+    {#each $posts as post (post.id)}
+        <div
+            class="border-b border-gray-800 p-4 transition hover:bg-white/2 {post.pending
+                ? 'opacity-50'
+                : ''}"
+        >
             <div class="flex gap-3">
                 <div
                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500 font-bold text-white"
                 >
-                    {name ? name[0].toUpperCase() : '?'}
+                    {post.name[0].toUpperCase()}
                 </div>
-                <div class="flex flex-1 flex-col gap-3">
-                    <input
-                        class="border-b border-gray-700 bg-transparent pb-1 text-sm text-gray-400 outline-none placeholder:text-gray-600 focus:border-sky-500"
-                        placeholder="Your name"
-                        bind:value={name}
-                    />
-                    <textarea
-                        class="min-h-20 resize-none bg-transparent text-lg outline-none placeholder:text-gray-600"
-                        placeholder="What is happening?!"
-                        bind:value={content}
-                    ></textarea>
-                    <div class="flex justify-end">
-                        <button
-                            onclick={submit}
-                            disabled={submitting || !name.trim() || !content.trim()}
-                            class="rounded-full bg-sky-500 px-5 py-1.5 text-sm font-bold transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            {submitting ? 'Posting...' : 'Post'}
-                        </button>
+                <div class="flex flex-1 flex-col gap-1">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">{post.name}</span>
+                            <span class="text-sm text-gray-500">· {timeAgo(post.createdAt)}</span>
+                        </div>
+                        {#if $user?.uid === post.uid}
+                            <button
+                                onclick={() => deletePost(post.id)}
+                                class="text-xs text-gray-600 transition hover:text-red-500"
+                                >Delete</button
+                            >
+                        {/if}
                     </div>
+                    <p class="leading-relaxed">{post.content}</p>
                 </div>
             </div>
         </div>
-
-        <!-- Feed -->
-        {#if $posts.length === 0}
-            <div class="p-8 text-center text-gray-500">No posts yet. Be the first!</div>
-        {:else}
-            {#each $posts as post (post.id)}
-                <div
-                    class="border-b border-gray-800 p-4 transition hover:bg-white/2 {post.pending
-                        ? 'opacity-50'
-                        : ''}"
-                >
-                    <div class="flex gap-3">
-                        <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500 font-bold text-white"
-                        >
-                            {post.name[0].toUpperCase()}
-                        </div>
-                        <div class="flex flex-1 flex-col gap-1">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold">{post.name}</span>
-                                    <span class="text-sm text-gray-500"
-                                        >· {timeAgo(post.createdAt)}</span
-                                    >
-                                </div>
-                                <button
-                                    onclick={() => deletePost(post.id)}
-                                    class="text-xs text-gray-600 transition hover:text-red-500"
-                                    >Delete</button
-                                >
-                            </div>
-                            <p class="leading-relaxed">{post.content}</p>
-                        </div>
-                    </div>
-                </div>
-            {/each}
-        {/if}
-    </div>
-</div>
+    {/each}
+{/if}

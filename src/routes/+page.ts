@@ -6,6 +6,7 @@ export function load() {
     const posts = readable<
         {
             id: string;
+            uid: string;
             name: string;
             content: string;
             createdAt: string | null;
@@ -17,6 +18,7 @@ export function load() {
             set(
                 snapshot.docs.map((doc) => ({
                     id: doc.id,
+                    uid: doc.data().uid,
                     name: doc.data().name,
                     content: doc.data().content,
                     createdAt: doc.data().createdAt?.toDate().toISOString() ?? null,

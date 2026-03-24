@@ -79,7 +79,11 @@
             <div class="p-8 text-center text-gray-500">No posts yet. Be the first!</div>
         {:else}
             {#each $posts as post (post.id)}
-                <div class="border-b border-gray-800 p-4 transition hover:bg-white/2">
+                <div
+                    class="border-b border-gray-800 p-4 transition hover:bg-white/2 {post.pending
+                        ? 'opacity-50'
+                        : ''}"
+                >
                     <div class="flex gap-3">
                         <div
                             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500 font-bold text-white"

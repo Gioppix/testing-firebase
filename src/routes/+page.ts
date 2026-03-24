@@ -4,7 +4,13 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 
 export function load() {
     const posts = readable<
-        { id: string; name: string; content: string; createdAt: string | null; exists: boolean }[]
+        {
+            id: string;
+            name: string;
+            content: string;
+            createdAt: string | null;
+            pending: boolean;
+        }[]
     >([], (set) => {
         const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
         return onSnapshot(q, (snapshot) => {
@@ -14,7 +20,7 @@ export function load() {
                     name: doc.data().name,
                     content: doc.data().content,
                     createdAt: doc.data().createdAt?.toDate().toISOString() ?? null,
-                    exists: doc.exists()
+                    pending: doc.metadata.hasPendingWrites
                 }))
             );
         });

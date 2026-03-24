@@ -19,7 +19,12 @@
                 <a href={resolve('/')} class="text-xl font-bold">Home</a>
                 {#if $user}
                     <div class="flex items-center gap-3">
-                        <span class="text-sm text-gray-400">{$user.displayName ?? $user.email}</span
+                        <a
+                            href={resolve(`/user/[username]`, {
+                                username: encodeURIComponent($user.displayName ?? $user.email ?? '')
+                            })}
+                            class="text-sm text-gray-400 transition hover:text-white"
+                            >{$user.displayName ?? $user.email}</a
                         >
                         <button
                             onclick={() => signOut(auth)}

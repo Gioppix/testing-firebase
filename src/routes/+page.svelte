@@ -1,6 +1,7 @@
 <script lang="ts">
     import { db } from '$lib/firebase';
     import { collection, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+    import { resolve } from '$app/paths';
 
     let { data } = $props();
     let posts = $derived(data.posts);
@@ -75,15 +76,21 @@
                 : ''}"
         >
             <div class="flex gap-3">
-                <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500 font-bold text-white"
+                <a
+                    href={resolve(`/user/[username]`, { username: encodeURIComponent(post.name) })}
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500 font-bold text-white transition hover:opacity-80"
                 >
                     {post.name[0].toUpperCase()}
-                </div>
+                </a>
                 <div class="flex flex-1 flex-col gap-1">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold">{post.name}</span>
+                            <a
+                                href={resolve(`/user/[username]`, {
+                                    username: encodeURIComponent(post.name)
+                                })}
+                                class="font-bold transition hover:underline">{post.name}</a
+                            >
                             <span class="text-sm text-gray-500">· {timeAgo(post.createdAt)}</span>
                         </div>
                         {#if $user?.uid === post.uid}
